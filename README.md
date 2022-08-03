@@ -35,7 +35,8 @@ API will return JSON file in this format:
   "biosample_id": list,
   "tol_id": string,
   "species_name": string,
-  "processing_status": string
+  "processing_status": string,
+  "message": list
 }
 ```
 
@@ -49,6 +50,7 @@ API will return JSON file in this format:
   "biosample_id": ["SAMEA13854414"],
   "tol_id": "xbThrPhas1",
   "species_name": "Thracia phaseolina",
-  "processing_status": "success"
+  "processing_status": "success",
+  "message": ["status was updated"]
 }
 ```
