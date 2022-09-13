@@ -1,18 +1,17 @@
+from elasticsearch import Elasticsearch
 from fastapi import FastAPI, status, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.responses import RedirectResponse
-from schemas import UserOut, UserAuth, TokenSchema, SystemUser
+from schemas import TokenSchema, SystemUser
 from utils import (
-    get_hashed_password,
     create_access_token,
     create_refresh_token,
     verify_password
 )
 from deps import get_current_user
-from uuid import uuid4
 
 USER = {'test': {'password': '$2b$12$VEv.oiHtmEKjC4DQ11Dlb.nOH5JLzTBq7DqQ7Rrx/BpWQ7cTtRs3a', 'username': 'test'}}
+es = Elasticsearch(['elasticsearch:9200'])
 
 
 class StatusBody(BaseModel):

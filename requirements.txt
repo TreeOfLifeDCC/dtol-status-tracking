@@ -4,3 +4,4 @@ python-jose[cryptography]
 passlib[bcrypt]
 jose
 social-auth-core
+elasticsearch[async]==7.17.0
