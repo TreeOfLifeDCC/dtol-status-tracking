@@ -42,20 +42,20 @@ async def status_update(status: StatusBody,
 @app.post('/login', summary="Create access and refresh tokens for user",
           response_model=TokenSchema)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = es.search(index='user', q="_id:user")
+    user = es.search(index='user', q=f"_id:{form_data.username}")
     try:
         user = user['hits']['hits'][0]['_source']
     except IndexError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect username or password"
+            detail="Incorrect username"
         )
 
     hashed_pass = user['password']
     if not verify_password(form_data.password, hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect username or password"
+            detail="Incorrect password"
         )
 
     return {

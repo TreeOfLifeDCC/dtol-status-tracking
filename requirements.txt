@@ -5,3 +5,6 @@ passlib[bcrypt]
 jose
 social-auth-core
 elasticsearch[async]==7.17.0
+uvicorn==0.15.0
+requests==2.27.1
+python-multipart
