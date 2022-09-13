@@ -1,21 +1,22 @@
-from typing import Union, Any
+from elasticsearch import Elasticsearch
 from datetime import datetime
+from jose import jwt
+from pydantic import ValidationError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from utils import (
+
+from app.utils import (
     ALGORITHM,
     JWT_SECRET_KEY
 )
-USER = {'test': {'password': '$2b$12$VEv.oiHtmEKjC4DQ11Dlb.nOH5JLzTBq7DqQ7Rrx/BpWQ7cTtRs3a', 'username': 'test'}}
-
-from jose import jwt
-from pydantic import ValidationError
-from schemas import TokenPayload, SystemUser
+from app.schemas import TokenPayload, SystemUser
 
 reusable_oauth = OAuth2PasswordBearer(
     tokenUrl="/login",
     scheme_name="JWT"
 )
+
+es = Elasticsearch(['elasticsearch:9200'])
 
 
 async def get_current_user(token: str = Depends(reusable_oauth)) -> SystemUser:
@@ -37,13 +38,12 @@ async def get_current_user(token: str = Depends(reusable_oauth)) -> SystemUser:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
-    user: Union[dict[str, Any], None] = USER.get(token_data.sub, None)
-
-    if user is None:
+    user = es.search(index='user', q=f"_id:{token_data.sub}")
+    try:
+        user = user['hits']['hits'][0]['_source']
+    except IndexError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Could not find user",
         )
-
     return SystemUser(**user)

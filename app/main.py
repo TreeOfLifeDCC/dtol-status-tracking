@@ -2,15 +2,14 @@ from elasticsearch import Elasticsearch
 from fastapi import FastAPI, status, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
-from schemas import TokenSchema, SystemUser
-from utils import (
+from app.schemas import TokenSchema, SystemUser
+from app.utils import (
     create_access_token,
     create_refresh_token,
     verify_password
 )
-from deps import get_current_user
+from app.deps import get_current_user
 
-USER = {'test': {'password': '$2b$12$VEv.oiHtmEKjC4DQ11Dlb.nOH5JLzTBq7DqQ7Rrx/BpWQ7cTtRs3a', 'username': 'test'}}
 es = Elasticsearch(['elasticsearch:9200'])
 
 
@@ -43,9 +42,10 @@ async def status_update(status: StatusBody,
 @app.post('/login', summary="Create access and refresh tokens for user",
           response_model=TokenSchema)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # user = db.get(form_data.username, None)
-    user = USER.get(form_data.username, None)
-    if user is None:
+    user = es.search(index='user', q="_id:user")
+    try:
+        user = user['hits']['hits'][0]['_source']
+    except IndexError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect username or password"
