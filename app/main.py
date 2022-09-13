@@ -30,13 +30,24 @@ async def status_update(status: StatusBody,
                         user: SystemUser = Depends(get_current_user)):
     if status.status not in [
         'sample_received', 'sample_released_for_lab_processing',
-        'sapmle_in_sequencing', 'sample_in_assembly',
+        'sample_in_sequencing', 'sample_in_assembly',
         'sample_recollection_required'
     ]:
         status.processing_status = 'error'
         status.message = "Couldn't recognize status"
-    else:
+    search_results = es.search(index='data_portal',
+                               q=f"_id:{status.species_name}")
+    try:
+        search_results = search_results['hits']['hits'][0]['_source']
+        search_results[status.status] = True
+        es.index(index='data_portal', document=search_results,
+                 id=status.species_name)
         status.processing_status = 'success'
+        status.message = [
+            f'status {status.status} was updated for {status.species_name}']
+    except IndexError:
+        status.processing_status = 'error'
+        status.message = "This record doesn't exist in data portal"
     return status
 
 
