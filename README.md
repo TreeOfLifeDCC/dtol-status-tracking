@@ -14,7 +14,7 @@ following format:
 **status** field can have following values:
 - sample_received
 - sample_released_for_lab_processing
-- sapmle_in_sequencing
+- sample_in_sequencing
 - sample_in_assembly
 - sample_recollection_required
 2. Example

@@ -30,7 +30,8 @@ async def status_update(status: StatusBody,
                         user: SystemUser = Depends(get_current_user)):
     if status.status not in [
         'sample_received', 'sample_released_for_lab_processing',
-        'sample_in_assembly', 'sample_recollection_required'
+        'sapmle_in_sequencing', 'sample_in_assembly',
+        'sample_recollection_required'
     ]:
         status.processing_status = 'error'
         status.message = "Couldn't recognize status"
