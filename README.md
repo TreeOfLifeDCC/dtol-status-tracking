@@ -60,7 +60,7 @@ API will return JSON file in this format:
 
 Login request - please request credentials from
 [dtol-dcc@ebi.ac.uk](mailto:dtol-dcc@ebi.ac.uk).
-```json
+```http request
 curl -X 'POST' \
   'https://portal.darwintreeoflife.org/statuses_update/login' \
   -H 'accept: application/json' \
@@ -73,7 +73,7 @@ API returns results in the format:
 ```
 
 Update status request
-```json
+```http request
 curl -X 'POST' \
   'https://portal.darwintreeoflife.org/statuses_update/status_update/' \
   -H 'accept: application/json' \
