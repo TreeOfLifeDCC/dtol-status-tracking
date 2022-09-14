@@ -55,3 +55,38 @@ API will return JSON file in this format:
   "message": ["status was updated"]
 }
 ```
+
+5. Examples
+
+Login request - please request credentials from
+[dtol-dcc@ebi.ac.uk](mailto:dtol-dcc@ebi.ac.uk).
+```json
+curl -X 'POST' \
+  'https://portal.darwintreeoflife.org/statuses_update/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'username={user_name}&password={password}'
+```
+API returns results in the format:
+```json
+{"access_token":"access_token_string","refresh_token":"refresh_token_string"}
+```
+
+Update status request
+```json
+curl -X 'POST' \
+  'https://portal.darwintreeoflife.org/statuses_update/status_update/' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer {JSON access token from the step above}' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "status": "string",
+  "biosamlpe_id": [
+    "string"
+  ],
+  "tol_id": "string",
+  "species_name": "string",
+  "processing_status": "string",
+  "message": "string"
+}'
+```
