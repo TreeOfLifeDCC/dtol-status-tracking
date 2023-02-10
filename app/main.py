@@ -40,29 +40,35 @@ app.add_middleware(
 
 
 @app.get("/{data_index}")
-async def index(data_index: str, offset: int = 0, limit: int = 15, filter: str | None = None):
+async def index(data_index: str, offset: int = 0, limit: int = 15, articleType: str | None = None,
+                journalTitle: str | None = None, pubYear: str | None = None):
     body = dict()
 
     # Aggregations
     body["aggs"] = dict()
     body["aggs"]['journalTitle'] = {
-        "terms": {"field": 'journalTitle'}
+        "terms": {"field": "journalTitle"}
     }
     body["aggs"]['pubYear'] = {
-        "terms": {"field": 'pubYear'}
+        "terms": {"field": "pubYear"}
+    }
+    body["aggs"]["articleType"] = {
+        "terms": {"field": "articleType"}
     }
 
     # Filters
-    if filter:
-        filters = filter.split(",")
+    if articleType or journalTitle or pubYear:
         body["query"] = {
             "bool": {
                 "filter": list()
             }
         }
-        for filter_item in filters:
-            filter_name, filter_value = filter_item.split(":")
-            body["query"]["bool"]["filter"].append({"term": {filter_name: filter_value}})
+    if articleType:
+        body["query"]["bool"]["filter"].append({"term": {'articleType': articleType}})
+    if journalTitle:
+        body["query"]["bool"]["filter"].append({"term": {'journalTitle': journalTitle}})
+    if pubYear:
+        body["query"]["bool"]["filter"].append({"term": {'pubYear': pubYear}})
     response = await es.search(index=data_index, from_=offset, size=limit, body=body)
     data = dict()
     data['count'] = response['hits']['total']['value']
