@@ -1,4 +1,5 @@
 from elasticsearch import AsyncElasticsearch
+from neo4j import GraphDatabase
 from fastapi import FastAPI, status, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
@@ -22,6 +23,26 @@ class StatusBody(BaseModel):
     species_name: str
     processing_status: str | None = None
     message: str | None = None
+
+class NeoFourJ:
+
+    def __init__(self, uri, user, password):
+        self.driver = GraphDatabase.driver(uri, auth=(user, password))
+
+    def close(self):
+        self.driver.close()
+
+    def get_rank(self, param):
+        with self.driver.session() as session:
+            rank = session.write_transaction(self._get_rank, param)
+            return rank
+
+    @staticmethod
+    def _get_rank(tx, param):
+        result = tx.run(
+            'MATCH (parent:Taxonomies)-[:CHILD]->(child:Taxonomies) where parent.name=~' '"' '.*' + param + '.*' '"'
+                                                                                                            'RETURN parent')
+        return result.single()[0]
 
 
 app = FastAPI()
@@ -124,3 +145,51 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "access_token": create_access_token(user['username']),
         "refresh_token": create_refresh_token(user['username']),
     }
+
+
+
+@app.get("/downloader_utility_data")
+async def index(taxonomyFilter: str, data_status: str, experiment_type: str):
+    neofourJ = NeoFourJ("bolt://45.88.80.141:30087", "neo4j", "DtolNeo4jAdminUser@123")
+    query_param = ' { "'"from"'" : 0, "'"size"'" : 5000, "'"query"'" : { "'"bool"'" : { "'"must"'" : [ '
+    if taxonomyFilter != '':
+        result = neofourJ.get_rank(taxonomyFilter)
+        query_param = query_param + '{ "nested" : { "path" : "taxonomies", "query" : { "nested" : { ' \
+                                            '"path" : ' \
+                                            '"taxonomies.' + result._properties.get(
+                                                'rank') + '"' ', "query" : { "bool" : { ' \
+                              '"must" : [{ ' \
+                              '"term" : { ' \
+                              '"taxonomies.' + result._properties.get(
+                                  'rank') + '.scientificName" :''"' + result._properties.get('name') + '"' '}}]}}}}}} '
+    if data_status is not None and data_status != '':
+        split_array = data_status.split("-")
+    if split_array and split_array[0].strip() == 'Biosamples':
+        query_param = query_param + ',{ "terms" : { "biosamples" : [''"' + split_array[1].strip() + '"'']}}'
+    elif split_array and split_array[0].strip() == 'Raw Data':
+        query_param = query_param + ',{ "terms" : { "raw_data" : [''"' + split_array[1].strip() + '"'']}}'
+    elif split_array and split_array[0].strip() == 'Mapped Reads':
+        query_param = query_param + ',{ "terms" : { "mapped_reads" : [''"' + split_array[
+        1].strip() + '"'']}}'
+    elif split_array and split_array[0].strip() == 'Assemblies':
+        query_param = query_param + ',{ "terms" : { "assemblies_status" : [''"' + split_array[
+        1].strip() + '"'']}}'
+    elif split_array and split_array[0].strip() == 'Annotation Complete':
+        query_param = query_param + ',{ "terms" : { "annotation_complete" : [''"' + split_array[
+        1].strip() + '"'']}}'
+    elif split_array and split_array[0].strip() == 'Annotation':
+        query_param = query_param + ',{ "terms" : { "annotation_status" : [''"' + split_array[
+        1].strip() + '"'']}}'
+    elif split_array and split_array[0].strip() == 'Genome Notes':
+        query_param = query_param + ',{ "nested": {"path": "genome_notes","query": {"bool": {"must": [{"exists": ' \
+                                            '{"field": "genome_notes.url"}}]}}}} '
+    if experiment_type != '' and experiment_type is not None:
+        query_param = query_param + ',{ "nested" : { "path": "experiment", "query" : { "bool" : { "must" : [' \
+                                        '{ "term" : { "experiment.library_construction_protocol.keyword" : ' + \
+                          '"' + experiment_type + '"' '}}]}}}}'
+
+    query_param = query_param + '] }}}'
+
+    response = es.search(index="data_portal", size=10000, body=query_param)
+    neofourJ.close()
+    return response
