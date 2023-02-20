@@ -3,7 +3,6 @@ from fastapi import FastAPI, status, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.neofourj import NeoFourJ
 from app.schemas import TokenSchema, SystemUser
 from app.utils import (
