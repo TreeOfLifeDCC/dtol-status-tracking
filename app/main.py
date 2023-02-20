@@ -12,6 +12,7 @@ from app.utils import (
 )
 from app.deps import get_current_user
 
+
 es = AsyncElasticsearch(['elasticsearch:9200'])
 
 
