@@ -1,10 +1,11 @@
 fastapi==0.79.0
 pydantic==1.9.1
 python-jose[cryptography]
-passlib[bcrypt]
-jose
+passlib[bcrypt]~=1.7.4
+jose~=1.0.0
 social-auth-core
 elasticsearch[async]==7.17.0
 uvicorn==0.15.0
 requests==2.27.1
 python-multipart
+neo4j~=5.0.1

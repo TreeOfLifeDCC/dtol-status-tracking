@@ -148,48 +148,101 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 
-@app.get("/downloader_utility_data")
-async def index(taxonomyFilter: str, data_status: str, experiment_type: str):
-    neofourJ = NeoFourJ("bolt://45.88.80.141:30087", "neo4j", "DtolNeo4jAdminUser@123")
-    query_param = ' { "'"from"'" : 0, "'"size"'" : 5000, "'"query"'" : { "'"bool"'" : { "'"must"'" : [ '
-    if taxonomyFilter != '':
-        result = neofourJ.get_rank(taxonomyFilter)
-        query_param = query_param + '{ "nested" : { "path" : "taxonomies", "query" : { "nested" : { ' \
-                                            '"path" : ' \
-                                            '"taxonomies.' + result._properties.get(
-                                                'rank') + '"' ', "query" : { "bool" : { ' \
-                              '"must" : [{ ' \
-                              '"term" : { ' \
-                              '"taxonomies.' + result._properties.get(
-                                  'rank') + '.scientificName" :''"' + result._properties.get('name') + '"' '}}]}}}}}} '
+@app.get("/downloader_utility_data/")
+async def downloader_utility_data(taxonomy_filter: str, data_status: str, experiment_type: str):
+    global split_array
+    neofourJ = NeoFourJ()
+    body = dict()
+    if taxonomy_filter != '':
+        result = neofourJ.get_rank(taxonomy_filter)
+        if taxonomy_filter:
+            body["query"] = {
+                "bool": {
+                    "filter": list()
+                }
+            }
+
+            nested_dict = {
+                "nested": {
+                    "path": f"taxonomies.{result._properties.get('rank')}",
+                    "query": {
+                        "bool": {
+                            "filter": list()
+                        }
+                    }
+                }
+            }
+            nested_dict["nested"]["query"]["bool"]["filter"].append(
+                {
+                    "term": {
+                        f"taxonomies.{result._properties.get('rank')}.scientificName": result._properties.get('name')
+                    }
+                }
+            )
+            body["query"]["bool"]["filter"].append(nested_dict)
     if data_status is not None and data_status != '':
         split_array = data_status.split("-")
     if split_array and split_array[0].strip() == 'Biosamples':
-        query_param = query_param + ',{ "terms" : { "biosamples" : [''"' + split_array[1].strip() + '"'']}}'
+        body["query"]["bool"]["filter"].append(
+            {"term": {'biosamples': split_array[1].strip()}}
+        )
     elif split_array and split_array[0].strip() == 'Raw Data':
-        query_param = query_param + ',{ "terms" : { "raw_data" : [''"' + split_array[1].strip() + '"'']}}'
+        body["query"]["bool"]["filter"].append(
+            {"term": {'raw_data': split_array[1].strip()}}
+        )
     elif split_array and split_array[0].strip() == 'Mapped Reads':
-        query_param = query_param + ',{ "terms" : { "mapped_reads" : [''"' + split_array[
-        1].strip() + '"'']}}'
+        body["query"]["bool"]["filter"].append(
+            {"term": {'mapped_reads': split_array[1].strip()}})
+
     elif split_array and split_array[0].strip() == 'Assemblies':
-        query_param = query_param + ',{ "terms" : { "assemblies_status" : [''"' + split_array[
-        1].strip() + '"'']}}'
+        body["query"]["bool"]["filter"].append(
+            {"term": {'assemblies_status': split_array[1].strip()}})
     elif split_array and split_array[0].strip() == 'Annotation Complete':
-        query_param = query_param + ',{ "terms" : { "annotation_complete" : [''"' + split_array[
-        1].strip() + '"'']}}'
+        body["query"]["bool"]["filter"].append(
+            {"term": {'annotation_complete': split_array[1].strip()}})
     elif split_array and split_array[0].strip() == 'Annotation':
-        query_param = query_param + ',{ "terms" : { "annotation_status" : [''"' + split_array[
-        1].strip() + '"'']}}'
+        body["query"]["bool"]["filter"].append(
+            {"term": {'annotation_status': split_array[1].strip()}})
     elif split_array and split_array[0].strip() == 'Genome Notes':
-        query_param = query_param + ',{ "nested": {"path": "genome_notes","query": {"bool": {"must": [{"exists": ' \
-                                            '{"field": "genome_notes.url"}}]}}}} '
+        nested_dict = {
+            "nested": {
+                "path": "genome_notes",
+                "query": {
+                    "bool": {
+                        "must": [{
+                            "exists": {
+                                "field": "genome_notes.url"
+                            }
+                        }]
+                    }
+                }
+            }
+        }
+        body["query"]["bool"]["filter"].append(nested_dict)
     if experiment_type != '' and experiment_type is not None:
-        query_param = query_param + ',{ "nested" : { "path": "experiment", "query" : { "bool" : { "must" : [' \
-                                        '{ "term" : { "experiment.library_construction_protocol.keyword" : ' + \
-                          '"' + experiment_type + '"' '}}]}}}}'
-
-    query_param = query_param + '] }}}'
-
-    response = es.search(index="data_portal", size=10000, body=query_param)
+        nested_dict = {
+            "nested": {
+                "path": "experiment",
+                "query": {
+                    "bool": {
+                        "must": [{
+                            "term": {
+                                "experiment.library_construction_protocol.keyword": experiment_type
+                            }
+                        }]
+                    }
+                }
+            }
+        }
+        body["query"]["bool"]["filter"].append(nested_dict)
+    # print(json.dumps(body))
+    response = es.search(index="data_portal", from_=0, size=1, body=body)
+    total_count = response['hits']['total']['value']
+    result = response['hits']['hits']
+    results_count = len(response['hits']['hits'])
+    while total_count > results_count:
+        response1 = es.search(index="data_portal", from_=results_count, size=1, body=body)
+        result.append(response1['hits']['hits'])
+        results_count += len(response1['hits']['hits'])
     neofourJ.close()
     return response
