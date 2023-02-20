@@ -1,9 +1,10 @@
 from elasticsearch import AsyncElasticsearch
-from neo4j import GraphDatabase
 from fastapi import FastAPI, status, HTTPException, Depends
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+
+from app.neofourj import NeoFourJ
 from app.schemas import TokenSchema, SystemUser
 from app.utils import (
     create_access_token,
@@ -11,7 +12,6 @@ from app.utils import (
     verify_password
 )
 from app.deps import get_current_user
-
 
 es = AsyncElasticsearch(['elasticsearch:9200'])
 
@@ -23,26 +23,6 @@ class StatusBody(BaseModel):
     species_name: str
     processing_status: str | None = None
     message: str | None = None
-
-class NeoFourJ:
-
-    def __init__(self, uri, user, password):
-        self.driver = GraphDatabase.driver(uri, auth=(user, password))
-
-    def close(self):
-        self.driver.close()
-
-    def get_rank(self, param):
-        with self.driver.session() as session:
-            rank = session.write_transaction(self._get_rank, param)
-            return rank
-
-    @staticmethod
-    def _get_rank(tx, param):
-        result = tx.run(
-            'MATCH (parent:Taxonomies)-[:CHILD]->(child:Taxonomies) where parent.name=~' '"' '.*' + param + '.*' '"'
-                                                                                                            'RETURN parent')
-        return result.single()[0]
 
 
 app = FastAPI()
@@ -145,7 +125,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         "access_token": create_access_token(user['username']),
         "refresh_token": create_refresh_token(user['username']),
     }
-
 
 
 @app.get("/downloader_utility_data/")
