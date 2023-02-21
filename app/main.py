@@ -21,8 +21,8 @@ class StatusBody(BaseModel):
     biosamlpe_id: list
     tol_id: str
     species_name: str
-    processing_status: str =None
-    message: str = None
+    processing_status: str | None = None
+    message: str | None = None
 
 
 app = FastAPI()
@@ -41,8 +41,8 @@ app.add_middleware(
 
 
 @app.get("/{data_index}")
-async def index(data_index: str, offset: int = 0, limit: int = 15, articleType: str = None,
-                journalTitle: str= None, pubYear: str= None):
+async def index(data_index: str, offset: int = 0, limit: int = 15, articleType: str | None = None,
+                journalTitle: str | None = None, pubYear: str | None = None):
     body = dict()
 
     # Aggregations
@@ -134,17 +134,15 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
     body = dict()
     if taxonomy_filter != '':
         result = neofourJ.get_rank(taxonomy_filter)
-        print(result)
         if taxonomy_filter:
             body["query"] = {
                 "bool": {
                     "filter": list()
                 }
             }
-
             nested_dict = {
                 "nested": {
-                    "path": f"taxonomies.{result._properties.get('rank')}",
+                    "path": f"taxonomies.{result.get('parent').get('rank')}",
                     "query": {
                         "bool": {
                             "filter": list()
@@ -155,7 +153,7 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
             nested_dict["nested"]["query"]["bool"]["filter"].append(
                 {
                     "term": {
-                        f"taxonomies.{result._properties.get('rank')}.scientificName": result._properties.get('name')
+                        f"taxonomies.{result.get('parent').get('rank')}.scientificName": result.get('parent').get('name')
                     }
                 }
             )
@@ -215,7 +213,6 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
             }
         }
         body["query"]["bool"]["filter"].append(nested_dict)
-    # print(json.dumps(body))
     response = es.search(index="data_portal", from_=0, size=10000, body=body)
     total_count = response['hits']['total']['value']
     result = response['hits']['hits']

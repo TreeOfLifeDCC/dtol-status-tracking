@@ -23,5 +23,5 @@ class NeoFourJ:
     def _get_rank(tx, param):
         result_object = tx.run(
             f'MATCH (parent:Taxonomies)-[:CHILD]->(child:Taxonomies) where parent.name=~\".*{param}.*\"RETURN parent')
-        return result_object.data()[0].get('parent').get('rank')
+        return result_object.data()[0]
 
