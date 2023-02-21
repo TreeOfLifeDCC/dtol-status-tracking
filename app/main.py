@@ -129,7 +129,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.get("/downloader_utility_data/")
 async def downloader_utility_data(taxonomy_filter: str, data_status: str, experiment_type: str):
-    global split_array
     neofourJ = NeoFourJ()
     body = dict()
     if taxonomy_filter != '':
@@ -219,7 +218,7 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
     results_count = len(response['hits']['hits'])
     while total_count > results_count:
         response1 = es.search(index="data_portal", from_=results_count, size=10000, body=body)
-        result.append(response1['hits']['hits'])
+        result.extend(response1['hits']['hits'])
         results_count += len(response1['hits']['hits'])
     neofourJ.close()
     return response
