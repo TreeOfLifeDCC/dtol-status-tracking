@@ -125,12 +125,12 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
             }
         }
         body["query"]["bool"]["filter"].append(nested_dict)
-    response = es.search(index="data_portal", from_=0, size=10000, body=body)
+    response = await es.search(index="data_portal", from_=0, size=10000, body=body)
     total_count = response['hits']['total']['value']
     result = response['hits']['hits']
     results_count = len(response['hits']['hits'])
     while total_count > results_count:
-        response1 = es.search(index="data_portal", from_=results_count, size=10000, body=body)
+        response1 = await es.search(index="data_portal", from_=results_count, size=10000, body=body)
         result.extend(response1['hits']['hits'])
         results_count += len(response1['hits']['hits'])
     neofourJ.close()
