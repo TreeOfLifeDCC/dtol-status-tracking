@@ -221,4 +221,4 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
         result.extend(response1['hits']['hits'])
         results_count += len(response1['hits']['hits'])
     neofourJ.close()
-    return response
+    return result
