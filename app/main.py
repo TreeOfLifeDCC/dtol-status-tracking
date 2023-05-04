@@ -222,3 +222,18 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
         results_count += len(response1['hits']['hits'])
     neofourJ.close()
     return result
+
+
+@app.get("/downloader_utility_data_with_species/")
+async def downloader_utility_data_with_species(species_list: str):
+    body = dict()
+    result = []
+    if species_list != '' and species_list is not None:
+        species_list_array = species_list.split(",")
+        for organism in species_list_array:
+            body["query"] = {
+                "bool": {"filter": [{'term': {'_id': organism}}]}}
+            response = es.search(index='data_portal',
+                                 body=body)
+            result.extend(response['hits']['hits'])
+    return result
