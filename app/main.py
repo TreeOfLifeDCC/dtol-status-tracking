@@ -233,7 +233,7 @@ async def downloader_utility_data_with_species(species_list: str):
         for organism in species_list_array:
             body["query"] = {
                 "bool": {"filter": [{'term': {'_id': organism}}]}}
-            response = es.search(index='data_portal',
+            response = await es.search(index='data_portal',
                                  body=body)
             result.extend(response['hits']['hits'])
     return result
