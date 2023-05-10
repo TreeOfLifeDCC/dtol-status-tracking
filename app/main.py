@@ -224,3 +224,16 @@ async def index(data_index: str, offset: int = 0, limit: int = 15, articleType: 
     return data
 
 
+@app.get("/downloader_utility_data_with_species/")
+async def downloader_utility_data_with_species(species_list: str):
+    body = dict()
+    result = []
+    if species_list != '' and species_list is not None:
+        species_list_array = species_list.split(",")
+        for organism in species_list_array:
+            body["query"] = {
+                "bool": {"filter": [{'term': {'_id': organism}}]}}
+            response = await es.search(index='data_portal',
+                                 body=body)
+            result.extend(response['hits']['hits'])
+    return result
