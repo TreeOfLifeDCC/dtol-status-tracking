@@ -1,4 +1,4 @@
-# DToL status tracking API schema
+# ASG status tracking API schema
 
 1. API will accept statuses updates through POST request with json file having 
 following format:
@@ -59,10 +59,10 @@ API will return JSON file in this format:
 5. Examples
 
 Login request - please request credentials from
-[asg-dcc@ebi.ac.uk](mailto:asg-dcc@ebi.ac.uk).
+[dtol-dcc@ebi.ac.uk](mailto:dtol-dcc@ebi.ac.uk).
 ```http request
 curl -X 'POST' \
-  'https://portal.aquaticsymbiosisgenomics.org/statuses_update/login' \
+  'https://portal.darwintreeoflife.org/statuses_update/login' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -d 'username={user_name}&password={password}'
@@ -75,7 +75,7 @@ API returns results in the format:
 Update status request
 ```http request
 curl -X 'POST' \
-  'https://portal.aquaticsymbiosisgenomics.org/statuses_update/status_update/' \
+  'https://portal.darwintreeoflife.org/statuses_update/status_update/' \
   -H 'accept: application/json' \
   -H 'Authorization: Bearer {JSON access token from the step above}' \
   -H 'Content-Type: application/json' \
