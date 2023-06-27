@@ -179,7 +179,7 @@ async def status_update(status: StatusBody, user: SystemUser = Depends(get_curre
 @app.post('/login', summary="Create access and refresh tokens for user",
           response_model=TokenSchema)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = es.search(index='user', q=f"_id:{form_data.username}")
+    user = await es.search(index='user', q=f"_id:{form_data.username}")
     try:
         user = user['hits']['hits'][0]['_source']
     except IndexError:
