@@ -161,8 +161,7 @@ async def status_update(status: StatusBody, user: SystemUser = Depends(get_curre
     ]:
         status.processing_status = 'error'
         status.message = "Couldn't recognize status"
-    search_results = es.search(index='data_portal',
-                               q=f"_id:{status.species_name}")
+    search_results = await es.search(index='data_portal', q=f"_id:{status.species_name}")
     try:
         search_results = search_results['hits']['hits'][0]['_source']
         search_results[status.status] = True
