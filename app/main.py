@@ -72,43 +72,43 @@ async def downloader_utility_data(taxonomy_filter: str, data_status: str, experi
             body["query"]["bool"]["filter"].append(nested_dict)
     if data_status is not None and data_status != '':
         split_array = data_status.split("-")
-    if split_array and split_array[0].strip() == 'Biosamples':
-        body["query"]["bool"]["filter"].append(
-            {"term": {'biosamples': split_array[1].strip()}}
-        )
-    elif split_array and split_array[0].strip() == 'Raw Data':
-        body["query"]["bool"]["filter"].append(
-            {"term": {'raw_data': split_array[1].strip()}}
-        )
-    elif split_array and split_array[0].strip() == 'Mapped Reads':
-        body["query"]["bool"]["filter"].append(
-            {"term": {'mapped_reads': split_array[1].strip()}})
+        if split_array and split_array[0].strip() == 'Biosamples':
+            body["query"]["bool"]["filter"].append(
+                {"term": {'biosamples': split_array[1].strip()}}
+            )
+        elif split_array and split_array[0].strip() == 'Raw Data':
+            body["query"]["bool"]["filter"].append(
+                {"term": {'raw_data': split_array[1].strip()}}
+            )
+        elif split_array and split_array[0].strip() == 'Mapped Reads':
+            body["query"]["bool"]["filter"].append(
+                {"term": {'mapped_reads': split_array[1].strip()}})
 
-    elif split_array and split_array[0].strip() == 'Assemblies':
-        body["query"]["bool"]["filter"].append(
-            {"term": {'assemblies_status': split_array[1].strip()}})
-    elif split_array and split_array[0].strip() == 'Annotation Complete':
-        body["query"]["bool"]["filter"].append(
-            {"term": {'annotation_complete': split_array[1].strip()}})
-    elif split_array and split_array[0].strip() == 'Annotation':
-        body["query"]["bool"]["filter"].append(
-            {"term": {'annotation_status': split_array[1].strip()}})
-    elif split_array and split_array[0].strip() == 'Genome Notes':
-        nested_dict = {
-            "nested": {
-                "path": "genome_notes",
-                "query": {
-                    "bool": {
-                        "must": [{
-                            "exists": {
-                                "field": "genome_notes.url"
-                            }
-                        }]
+        elif split_array and split_array[0].strip() == 'Assemblies':
+            body["query"]["bool"]["filter"].append(
+                {"term": {'assemblies_status': split_array[1].strip()}})
+        elif split_array and split_array[0].strip() == 'Annotation Complete':
+            body["query"]["bool"]["filter"].append(
+                {"term": {'annotation_complete': split_array[1].strip()}})
+        elif split_array and split_array[0].strip() == 'Annotation':
+            body["query"]["bool"]["filter"].append(
+                {"term": {'annotation_status': split_array[1].strip()}})
+        elif split_array and split_array[0].strip() == 'Genome Notes':
+            nested_dict = {
+                "nested": {
+                    "path": "genome_notes",
+                    "query": {
+                        "bool": {
+                            "must": [{
+                                "exists": {
+                                    "field": "genome_notes.url"
+                                }
+                            }]
+                        }
                     }
                 }
             }
-        }
-        body["query"]["bool"]["filter"].append(nested_dict)
+            body["query"]["bool"]["filter"].append(nested_dict)
     if experiment_type != '' and experiment_type is not None:
         nested_dict = {
             "nested": {
