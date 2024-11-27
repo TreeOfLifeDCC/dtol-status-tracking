@@ -13,7 +13,14 @@ from app.utils import (
 from app.deps import get_current_user
 
 
-es = AsyncElasticsearch(['elasticsearch:9200'])
+ES_HOST = os.getenv('ES_HOST')
+ES_USERNAME = os.getenv('ES_USERNAME')
+ES_PASSWORD = os.getenv('ES_PASSWORD')
+
+es = AsyncElasticsearch(
+    [ES_HOST], connection_class=AIOHttpConnection,
+    http_auth=(ES_USERNAME, ES_PASSWORD),
+    use_ssl=True, verify_certs=False)
 
 
 class StatusBody(BaseModel):
