@@ -47,7 +47,7 @@ async def downloader_utility_data_with_species(species_list: str):
     return result
 
 
-@app.get("/{data_index}")
+@app.get("/statuses_update/{data_index}")
 async def index(data_index: str, offset: int = 0, limit: int = 15, articleType: str | None = None,
                 journalTitle: str | None = None, pubYear: str | None = None):
     body = dict()
